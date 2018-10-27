@@ -103,7 +103,7 @@ module ROM
     # Initializes a new repository object
     #
     # @api private
-    def initialize(*)
+    def initialize(*, container: nil, **)
       super
       @relations = {}
     end
