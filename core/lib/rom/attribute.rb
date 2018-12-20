@@ -23,6 +23,11 @@ module ROM
     #   @return [Dry::Types::Definition, Dry::Types::Sum, Dry::Types::Constrained] The attribute's type object
     param :type
 
+    # @!attribute [r] type
+    #   @return [Dry::Types::String, Dry::Types::Symbol, nil] Alias to
+    #   use instead of attribute name
+    option :alias, optional: true
+
     # @api private
     def [](value = Undefined)
       type[value]
@@ -76,12 +81,12 @@ module ROM
       meta[:foreign_key].equal?(true)
     end
 
-    # Return true if this attribute type is a foreign key
+    # Return true if this attribute has a configured alias
     #
     # @example
     #   class Tasks < ROM::Relation[:memory]
     #     schema do
-    #       attribute :user_id, Types::Integer.meta(alias: :id)
+    #       attribute :user_id, Types::Integer, alias: :id
     #       attribute :name, Types::String
     #     end
     #   end
@@ -96,7 +101,7 @@ module ROM
     #
     # @api public
     def aliased?
-      !meta[:alias].nil?
+      !self.alias.nil?
     end
 
     # Return source relation of this attribute type
@@ -153,7 +158,7 @@ module ROM
     # @example
     #   class Tasks < ROM::Relation[:memory]
     #     schema do
-    #       attribute :user_id, Types::Integer.meta(alias: :id)
+    #       attribute :user_id, Types::Integer, alias: :id
     #       attribute :name, Types::String
     #     end
     #   end
@@ -178,7 +183,7 @@ module ROM
     # @example
     #   class Tasks < ROM::Relation[:memory]
     #     schema do
-    #       attribute :user_id, Types::Integer.meta(alias: :id)
+    #       attribute :user_id, Types::Integer, alias: :id
     #       attribute :name, Types::String
     #     end
     #   end
@@ -193,30 +198,7 @@ module ROM
     #
     # @api public
     def key
-      meta[:alias] || name
-    end
-
-    # Return attribute's alias
-    #
-    # @example
-    #   class Tasks < ROM::Relation[:memory]
-    #     schema do
-    #       attribute :user_id, Types::Integer.meta(alias: :id)
-    #       attribute :name, Types::String
-    #     end
-    #   end
-    #
-    #   Users.schema[:user_id].alias
-    #   # => :user_id
-    #
-    #   Users.schema[:name].alias
-    #   # => nil
-    #
-    # @return [NilClass,Symbol]
-    #
-    # @api public
-    def alias
-      meta[:alias]
+      self.alias || name
     end
 
     # Return new attribute type with provided alias
@@ -246,7 +228,7 @@ module ROM
     #
     # @api public
     def aliased(name)
-      meta(alias: name)
+      self.class.new(type, options.merge(alias: name))
     end
     alias_method :as, :aliased
 
@@ -318,7 +300,7 @@ module ROM
     # @api public
     def meta(opts = nil)
       if opts
-        self.class.new(type.meta(opts))
+        self.class.new(type.meta(opts), options)
       else
         type.meta
       end
@@ -394,7 +376,7 @@ module ROM
     #
     # @api public
     def to_ast
-      [:attribute, [name, type.to_ast(meta: false), meta_ast]]
+      [:attribute, [name, type.to_ast(meta: false), meta_options_ast]]
     end
 
     # Return AST for the read type
@@ -403,18 +385,18 @@ module ROM
     #
     # @api public
     def to_read_ast
-      [:attribute, [name, to_read_type.to_ast(meta: false), meta_ast]]
+      [:attribute, [name, to_read_type.to_ast(meta: false), meta_options_ast]]
     end
 
     # @api private
-    def meta_ast
-      meta_keys = %i(wrapped alias primary_key)
-      ast = meta.select { |k, _| meta_keys.include?(k) }
+    def meta_options_ast
+      keys = %i[wrapped primary_key alias]
+      ast = (meta.merge options).select { |k, _| keys.include?(k) }
       ast[:source] = source.to_sym if source
       ast
     end
 
-    memoize :to_ast, :to_read_ast, :meta_ast
+    memoize :to_ast, :to_read_ast, :meta_options_ast
 
     private
 
