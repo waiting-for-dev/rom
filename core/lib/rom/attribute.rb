@@ -228,7 +228,7 @@ module ROM
     #
     # @api public
     def aliased(name)
-      self.class.new(type, options.merge(alias: name))
+      with(alias: name)
     end
     alias_method :as, :aliased
 
