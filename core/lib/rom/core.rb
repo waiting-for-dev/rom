@@ -31,6 +31,7 @@ require 'rom/plugins/relation/registry_reader'
 require 'rom/plugins/relation/instrumentation'
 require 'rom/plugins/command/schema'
 require 'rom/plugins/command/timestamps'
+require 'rom/plugins/command/alias'
 require 'rom/plugins/schema/timestamps'
 
 module ROM
@@ -43,5 +44,6 @@ module ROM
     register :instrumentation, ROM::Plugins::Relation::Instrumentation, type: :relation
     register :schema, ROM::Plugins::Command::Schema, type: :command
     register :timestamps, ROM::Plugins::Command::Timestamps, type: :command
+    register :alias, ROM::Plugins::Command::Alias, type: :command
   end
 end
