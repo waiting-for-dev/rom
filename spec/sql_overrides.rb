@@ -36,5 +36,25 @@ module ROM
         self.alias || super
       end
     end
+
+    class ProjectionDSL < DSL
+      def method_missing(meth, *args, &block)
+        if schema.key?(meth)
+          schema[meth]
+        else
+          type = type(meth)
+
+          if type
+            if args.empty?
+              ::ROM::SQL::Function.new(type, name: :__anonymous__, schema: schema)
+            else
+              ::ROM::SQL::Attribute[type].value(args[0])
+            end
+          else
+            super
+          end
+        end
+      end
+    end
   end
 end
