@@ -48,7 +48,7 @@ module ROM
     # @return [Symbol]
     #
     # @api public
-    option :name, type: Types::Strict::Symbol
+    option :name, optional: true, type: Types::Strict::Symbol.optional
 
     # @!attribute [r] type
     #   @return [Symbol, nil] Alias to use instead of attribute name
